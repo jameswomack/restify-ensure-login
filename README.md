@@ -1,4 +1,4 @@
-# connect-ensure-login
+# restify-ensure-login
 
 This middleware ensures that a user is logged in.  If a request is received that
 is unauthenticated, the request will be redirected to a login page.  The URL
@@ -7,7 +7,7 @@ page that was originally requested.
 
 ## Install
 
-    $ npm install connect-ensure-login
+    $ npm install restify-ensure-login
 
 ## Usage
 
@@ -28,7 +28,7 @@ saved to the session at `req.session.returnTo`.
 
 #### Log In and Return To
 
-This middleware integrates seamlessly with [Passport](http://passportjs.org/).
+This middleware integrates seamlessly with [Passport Restify](https://github.com/jameswomack/passport-restify).
 Simply mount Passport's `authenticate()` middleware at the login route.
 
     app.get('/login', function(req, res) {
@@ -62,7 +62,7 @@ what happens:
     $ npm install --dev
     $ make test
 
-[![Build Status](https://secure.travis-ci.org/jaredhanson/connect-ensure-login.png)](http://travis-ci.org/jaredhanson/connect-ensure-login)
+[![Build Status](https://secure.travis-ci.org/jameswomack/restify-ensure-login.png)](http://travis-ci.org/jameswomack/restify-ensure-login)
 
 ## Credits
 
