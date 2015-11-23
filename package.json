@@ -1,6 +1,6 @@
 {
   "name": "restify-ensure-login",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Login session ensuring middleware for Restify.",
   "keywords": [
     "restify",
@@ -13,16 +13,20 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/jaredhanson/restify-ensure-login.git"
+    "url": "git://github.com/jameswomack/restify-ensure-login.git"
   },
   "bugs": {
-    "url": "http://github.com/jaredhanson/restify-ensure-login/issues"
+    "url": "http://github.com/jameswomack/restify-ensure-login/issues"
   },
   "author": {
     "name": "Jared Hanson",
     "email": "jaredhanson@gmail.com",
     "url": "http://www.jaredhanson.net/"
   },
+  "contributors": [
+    "James Womack <james@womack.io>",
+    "Kevin Mudrick <kmudrick@gmail.com>"
+  ],
   "licenses": [
     {
       "type": "MIT",

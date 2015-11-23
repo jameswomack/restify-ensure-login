@@ -3,9 +3,15 @@ var assert = require('assert');
 var util = require('util');
 var ensureLoggedIn = require('ensureLoggedIn');
 
-
 function MockRequest() {
   this.session = {};
+  this.query = {};
+  this.headers = {};
+  this.query = {};
+}
+
+MockRequest.prototype.header = function(key, defaultValue) {
+  return this.headers[key.toLowerCase()] || defaultValue;
 }
 
 function MockResponse() {
@@ -26,6 +32,10 @@ MockResponse.prototype.end = function(data, encoding) {
   if (this.done) { this.done(); }
 }
 
+MockResponse.prototype.status = function(statusCode) {
+  this._statusCode = statusCode;
+  this.end();
+}
 
 vows.describe('ensureLoggedIn').addBatch({
 
@@ -33,7 +43,7 @@ vows.describe('ensureLoggedIn').addBatch({
     topic: function() {
       return ensureLoggedIn('/signin');
     },
-    
+
     'when handling a request that is authenticated': {
       topic: function(ensureLoggedIn) {
         var self = this;
@@ -44,7 +54,7 @@ vows.describe('ensureLoggedIn').addBatch({
         res.done = function() {
           self.callback(new Error('should not be called'));
         }
-        
+
         function next(err) {
           self.callback(err, req, res);
         }
@@ -52,7 +62,7 @@ vows.describe('ensureLoggedIn').addBatch({
           ensureLoggedIn(req, res, next)
         });
       },
-      
+
       'should not error' : function(err, req, res) {
         assert.isNull(err);
       },
@@ -63,7 +73,7 @@ vows.describe('ensureLoggedIn').addBatch({
         assert.isUndefined(req.session.returnTo);
       },
     },
-    
+
     'when handling a request that is not authenticated': {
       topic: function(ensureLoggedIn) {
         var self = this;
@@ -74,7 +84,7 @@ vows.describe('ensureLoggedIn').addBatch({
         res.done = function() {
           self.callback(null, req, res);
         }
-        
+
         function next(err) {
           self.callback(new Error('should not be called'));
         }
@@ -82,7 +92,7 @@ vows.describe('ensureLoggedIn').addBatch({
           ensureLoggedIn(req, res, next)
         });
       },
-      
+
       'should not error' : function(err, req, res) {
         assert.isNull(err);
       },
@@ -93,7 +103,75 @@ vows.describe('ensureLoggedIn').addBatch({
         assert.equal(req.session.returnTo, '/foo');
       },
     },
-    
+
+    'when handling an request that is not authenticated with an ajax param': {
+      topic: function(ensureLoggedIn) {
+        var self = this;
+        var req = new MockRequest();
+        req.url = '/foo';
+        req.query.ajax = 'true';
+        req.isAuthenticated = function() { return false; };
+        var res = new MockResponse();
+        res.done = function() {
+          self.callback(null, req, res);
+        }
+
+        function next(err) {
+          self.callback(err, req, res);
+        }
+        process.nextTick(function () {
+          ensureLoggedIn(req, res, next)
+        });
+      },
+
+      'should not error' : function(err, req, res) {
+        assert.isNull(err);
+      },
+      'should not redirect' : function(err, req, res) {
+        assert.isUndefined(res._redirect);
+      },
+      'should not set returnTo' : function(err, req, res) {
+        assert.isUndefined(req.session.returnTo);
+      },
+      'should set status code' : function(err, req, res) {
+        assert.equal(res._statusCode, 401);
+      }
+    },
+
+    'when handling an request that is not authenticated with x-requested-with header': {
+      topic: function(ensureLoggedIn) {
+        var self = this;
+        var req = new MockRequest();
+        req.url = '/foo';
+        req.headers['x-requested-with'] = 'XMLHttpRequest';
+        req.isAuthenticated = function() { return false; };
+        var res = new MockResponse();
+        res.done = function() {
+          self.callback(null, req, res);
+        }
+
+        function next(err) {
+          self.callback(err, req, res);
+        }
+        process.nextTick(function () {
+          ensureLoggedIn(req, res, next)
+        });
+      },
+
+      'should not error' : function(err, req, res) {
+        assert.isNull(err);
+      },
+      'should not redirect' : function(err, req, res) {
+        assert.isUndefined(res._redirect);
+      },
+      'should not set returnTo' : function(err, req, res) {
+        assert.isUndefined(req.session.returnTo);
+      },
+      'should set status code' : function(err, req, res) {
+        assert.equal(res._statusCode, 401);
+      }
+    },
+
     'when handling a request to a sub-app that is not authenticated': {
       topic: function(ensureLoggedIn) {
         var self = this;
@@ -105,7 +183,7 @@ vows.describe('ensureLoggedIn').addBatch({
         res.done = function() {
           self.callback(null, req, res);
         }
-        
+
         function next(err) {
           self.callback(new Error('should not be called'));
         }
@@ -113,7 +191,7 @@ vows.describe('ensureLoggedIn').addBatch({
           ensureLoggedIn(req, res, next)
         });
       },
-      
+
       'should not error' : function(err, req, res) {
         assert.isNull(err);
       },
@@ -124,7 +202,7 @@ vows.describe('ensureLoggedIn').addBatch({
         assert.equal(req.session.returnTo, '/sub/foo');
       },
     },
-    
+
     'when handling a request that lacks an isAuthenticated function': {
       topic: function(ensureLoggedIn) {
         var self = this;
@@ -134,7 +212,7 @@ vows.describe('ensureLoggedIn').addBatch({
         res.done = function() {
           self.callback(null, req, res);
         }
-        
+
         function next(err) {
           self.callback(new Error('should not be called'));
         }
@@ -142,7 +220,7 @@ vows.describe('ensureLoggedIn').addBatch({
           ensureLoggedIn(req, res, next)
         });
       },
-      
+
       'should not error' : function(err, req, res) {
         assert.isNull(err);
       },
@@ -154,12 +232,12 @@ vows.describe('ensureLoggedIn').addBatch({
       },
     },
   },
-  
+
   'middleware with a redirectTo and setReturnTo options': {
     topic: function() {
       return ensureLoggedIn({ redirectTo: '/session/new', setReturnTo: false });
     },
-    
+
     'when handling a request that is not authenticated': {
       topic: function(ensureLoggedIn) {
         var self = this;
@@ -170,7 +248,7 @@ vows.describe('ensureLoggedIn').addBatch({
         res.done = function() {
           self.callback(null, req, res);
         }
-        
+
         function next(err) {
           self.callback(new Error('should not be called'));
         }
@@ -178,7 +256,7 @@ vows.describe('ensureLoggedIn').addBatch({
           ensureLoggedIn(req, res, next)
         });
       },
-      
+
       'should not error' : function(err, req, res) {
         assert.isNull(err);
       },
@@ -190,12 +268,12 @@ vows.describe('ensureLoggedIn').addBatch({
       },
     },
   },
-  
+
   'middleware with defaults': {
     topic: function() {
       return ensureLoggedIn();
     },
-    
+
     'when handling a request that is not authenticated': {
       topic: function(ensureLoggedIn) {
         var self = this;
@@ -206,7 +284,7 @@ vows.describe('ensureLoggedIn').addBatch({
         res.done = function() {
           self.callback(null, req, res);
         }
-        
+
         function next(err) {
           self.callback(new Error('should not be called'));
         }
@@ -214,7 +292,7 @@ vows.describe('ensureLoggedIn').addBatch({
           ensureLoggedIn(req, res, next)
         });
       },
-      
+
       'should not error' : function(err, req, res) {
         assert.isNull(err);
       },
