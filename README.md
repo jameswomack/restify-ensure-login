@@ -5,6 +5,10 @@ is unauthenticated, the request will be redirected to a login page.  The URL
 will be saved in the session, so the user can be conveniently returned to the
 page that was originally requested.
 
+If the request appears to be an ajax request (XHR), a 401 status code will be sent
+instead of redirecting to login.  This is detected by looking for an X-Requested-With
+header, or for query string parameter called ajax with a value of 'true'.
+
 ## Install
 
     $ npm install restify-ensure-login
@@ -21,7 +25,7 @@ configured.  A user must be logged in before accessing this page.
       function(req, res) {
         res.render('settings', { user: req.user });
       });
-      
+
 If a user is not logged in when attempting to access this page, the request will
 be redirected to `/login` and the original request URL (`/settings`) will be
 saved to the session at `req.session.returnTo`.
@@ -36,7 +40,7 @@ Simply mount Passport's `authenticate()` middleware at the login route.
     });
 
     app.post('/login', passport.authenticate('local', { successReturnToOrRedirect: '/', failureRedirect: '/login' }));
-    
+
 Upon log in, Passport will notice the `returnTo` URL saved in the session and
 redirect the user back to `/settings`.
 
