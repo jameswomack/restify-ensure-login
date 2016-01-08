@@ -32,7 +32,7 @@ MockResponse.prototype.end = function(data, encoding) {
   if (this.done) { this.done(); }
 }
 
-MockResponse.prototype.status = function(statusCode) {
+MockResponse.prototype.send = function(statusCode) {
   this._statusCode = statusCode;
   this.end();
 }
