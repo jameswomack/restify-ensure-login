@@ -1,3 +1,7 @@
+# 2.0.2
+
+  - On 401 (unauthorized) responses for ajax calls, pass false to next() to stop the handler chain
+
 # 2.0.1
 
   - Fix the 401 response on ajax requests to call send() rather than simply setting the status (which can be overriden by later handlers in the chain)
